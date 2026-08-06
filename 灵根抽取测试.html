@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修仙灵根测试 · 正式版</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #0a0e1a;
+            color: #c8d0e0;
+            text-align: center;
+            padding: 20px 15px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background-image: radial-gradient(ellipse at center, #1a2a3a 0%, #0a0e1a 100%);
+        }
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: rgba(20, 30, 50, 0.85);
+            border-radius: 20px;
+            padding: 20px 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,215,0,0.12);
+            backdrop-filter: blur(4px);
+            margin-bottom: 15px;
+        }
+        h1 { font-size: 2rem; margin-top: 0; margin-bottom: 6px; color: #f0e68c; text-shadow: 0 0 20px rgba(255,215,0,0.25); letter-spacing: 3px; font-weight: 300; }
+        .subtitle { font-size: 0.8rem; color: #8a9aaa; margin-bottom: 18px; letter-spacing: 2px; }
+        #result-box {
+            background: rgba(10, 15, 30, 0.6); border-radius: 12px; padding: 16px 18px;
+            min-height: 70px; margin-bottom: 16px; border-left: 3px solid #f0e68c;
+            text-align: left; line-height: 1.7; font-size: 1rem;
+            white-space: pre-wrap; word-break: break-word; color: #dce3f0;
+        }
+        #result-box .highlight { color: #ffd866; font-weight: bold; }
+        #result-box .root-detail { display: block; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #3a4a6a; font-size: 0.9rem; color: #b0c8e0; }
+        .info-bar {
+            display: flex; justify-content: space-between; flex-wrap: wrap;
+            background: rgba(10, 15, 30, 0.4); border-radius: 10px;
+            padding: 8px 14px; margin-bottom: 12px; font-size: 0.85rem;
+            color: #b0c8e0; border: 1px solid #2a3a5a;
+        }
+        .info-bar span { color: #f0e68c; font-weight: bold; }
+        .recovery-info {
+            font-size: 0.8rem;
+            color: #8a9aaa;
+            margin: 6px 0 12px 0;
+            min-height: 24px;
+        }
+        .recovery-info .highlight-time { color: #ffd866; font-weight: bold; }
+        .btn {
+            background: linear-gradient(135deg, #f0d060, #d4a830);
+            border: none; color: #1a1a2e; padding: 12px 36px;
+            font-size: 1.2rem; border-radius: 40px; cursor: pointer;
+            font-weight: bold; letter-spacing: 2px;
+            box-shadow: 0 4px 12px rgba(212, 168, 48, 0.3);
+            transition: 0.25s; margin-bottom: 6px;
+        }
+        .btn:hover:not(:disabled) { transform: scale(1.03); box-shadow: 0 6px 20px rgba(212, 168, 48, 0.5); }
+        .btn:active:not(:disabled) { transform: scale(0.96); }
+        .btn:disabled { background: #555; color: #999; cursor: not-allowed; box-shadow: none; transform: none; }
+        #history-area { margin-top: 18px; text-align: left; border-top: 1px solid #2a3a5a; padding-top: 14px; max-height: 280px; overflow-y: auto; }
+        #history-area h3 { color: #9aaec9; font-weight: 300; letter-spacing: 2px; font-size: 0.9rem; margin-top: 0; margin-bottom: 10px; }
+        .history-item {
+            background: rgba(10, 15, 30, 0.5); border-radius: 6px; padding: 8px 12px;
+            margin-bottom: 6px; border-left: 3px solid #4a6a8a;
+            font-size: 0.85rem; line-height: 1.5;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px 6px;
+        }
+        .history-item .seq { color: #8a9aaa; margin-right: 4px; }
+        .history-item .valid { color: #6f8; font-weight: bold; }
+        .history-item .invalid { color: #f88; font-weight: bold; }
+        .history-item .desc-text { flex: 1; min-width: 120px; margin: 0 4px; }
+        .history-item .arrow { color: #ddd; font-size: 0.95rem; margin: 0 3px; }
+        .history-item .root-display { font-weight: bold; font-size: 1rem; margin: 0 3px; }
+        .history-item .root-display .root-item { font-weight: bold; font-size: 1rem; }
+        .history-item .del-btn { background: transparent; border: none; color: #8a5a5a; cursor: pointer; font-size: 1.1rem; padding: 0 4px; transition: 0.2s; line-height: 1; }
+        .history-item .del-btn:hover { color: #f66; transform: scale(1.2); }
+        .footer { margin-top: 12px; font-size: 0.7rem; color: #5a6a7a; letter-spacing: 1px; }
+        .note { font-size: 0.75rem; color: #6a7a8a; margin-top: 4px; }
+        .note span { color: #f0e68c; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>✦ 灵根测试 ✦</h1>
+    <div class="subtitle">— 天道昭昭，测你修仙资质 —</div>
+    <div class="info-bar">
+        <div>有效次数：<span id="valid-count">0</span> / 5</div>
+        <div>总抽取次数：<span id="total-count">0</span></div>
+        <div>状态：<span id="status-text">可测试</span></div>
+    </div>
+    <div id="recovery-info" class="recovery-info"></div>
+    <div id="result-box">点击下方按钮，窥探你的灵根天命。</div>
+    <button class="btn" id="testBtn" onclick="testRoot()">逆天改命</button>
+    <div class="note">* 只有 <span>双灵根</span>、<span>单灵根</span>、<span>极品天灵根</span> 计入有效次数<br>* 三、四、五灵根不消耗次数<br>* 每2小时恢复1次有效次数</div>
+    <div id="history-area">
+        <h3>📜 历史记录</h3>
+        <div id="history-list"><div style="color:#5a6a7a; font-size:0.8rem; text-align:center;">暂无记录</div></div>
+    </div>
+    <div class="footer">天道有常 · 万法归宗</div>
+</div>
+
+<script>
+    // ---------- 配置 ----------
+    const MAX_VALID = 5;
+    const RECOVERY_INTERVAL_MS = 2 * 60 * 60 * 1000;
+
+    // ---------- 颜色映射 ----------
+    function getRootColor(root) {
+        const map = {
+            '金': '#FFD700', '木': '#2E8B57', '水': '#1E90FF', '火': '#FF4500',
+            '土': '#D2B48C', '花': '#FF69B4', '幻': '#DDA0DD', '电': '#8B008B',
+            '音': '#F0F0F0', '幽冥': '#999999'
+        };
+        return map[root] || '#FFFFFF';
+    }
+
+    // ---------- 200条描述 ----------
+    const descriptions = [
+        "紫气东来，灵光冲天！你竟是万中无一的【极品天灵根】！此乃上天眷顾，修炼一日千里，未来必成一代大能！",
+        "灵光纯净，毫无杂色，你是【单灵根】！虽不及天灵根，但亦是凤毛麟角，前途不可限量！",
+        "你身具单灵根，且资质极佳，是为【单灵根】！修行之路坦荡，有望问鼎大道。",
+        "灵根澄澈如玉，只有一脉，这是【单灵根】！你生来便是修仙的好苗子。",
+        "一灵独显，光华内敛，你是【单灵根】！他日必成大器。",
+        "单灵根者，万中选一，你是【单灵根】！只要不陨落，飞升可期。",
+        "灵根纯粹，毫无杂驳，此为【单灵根】！修炼速度远超常人。",
+        "天地灵气独宠于你，单灵根之姿，是为【单灵根】！羡煞旁人。",
+        "你天生便是【单灵根】，资质上佳，宗门必争相招揽。",
+        "灵根如明月，独悬夜空，你是【单灵根】！未来不可限量。",
+        "单灵根者，人中之龙，你正是【单灵根】！大道可期。",
+        "灵根相生，相辅相成，你拥有【双灵根】！虽然比不上天之骄子，但只要勤勉，亦可登临高位。",
+        "双灵根在身，属性互补，修炼虽有阻滞，但贵在坚持，终有所成。",
+        "你是【双灵根】，两脉灵气交融，比上不足，比下有余，努力修行也能出人头地。",
+        "双灵根者，虽非绝顶，但若得遇名师，未必不能成就一番事业。",
+        "灵根成双，如阴阳并济，你是【双灵根】！切莫自弃。",
+        "双灵根资质，在修仙界中已属中上，只要肯下苦功，金丹可期。",
+        "你身负【双灵根】，灵气运转虽不及单灵根流畅，但胜在稳健。",
+        "双灵根者，常有相克之患，但若能调和，反成助力。",
+        "你是【双灵根】，两条灵根并行，修炼需耐心打磨。",
+        "双灵根虽不算顶尖，但足以让你在修仙路上走得更远。",
+        "灵根成双，福祸相依，你是【双灵根】！把握机缘。",
+        "双灵根之体，修炼速度中规中矩，但胜在持久。",
+        "你拥有【双灵根】，未来成就取决于你的努力与际遇。",
+        "双灵根者，常有意外之喜，你是其中之一。",
+        "灵根两脉，循环不息，此为【双灵根】！多加修炼，亦可崭露头角。",
+        "你是【双灵根】，虽然资源争夺中不占优势，但稳扎稳打亦有前途。",
+        "双灵根资质，在散修中已算不错，好好珍惜。",
+        "你身怀【双灵根】，若能找到相合功法，修炼事半功倍。",
+        "双灵根者，多有韧性，你是如此。",
+        "灵根成双，福缘自生，你便是【双灵根】！",
+        "双灵根虽常见，但其中佼佼者亦能开宗立派。",
+        "你是【双灵根】，莫羡他人，修己身即可。",
+        "双灵根之姿，若遇大机缘，亦可一飞冲天。",
+        "你拥有【双灵根】，修仙之路漫长，戒骄戒躁。",
+        "双灵根者，宜选互补属性，你当谨记。",
+        "你是【双灵根】，起点不低，未来在己。",
+        "灵根双生，气运相伴，此为【双灵根】！",
+        "双灵根者，多成中庸，但中庸亦有大道。",
+        "你身具【双灵根】，修行之中常遇瓶颈，需以毅力破之。",
+        "双灵根之资，若得丹药辅助，进步神速。",
+        "你是【双灵根】，修仙界中大多数人的起点。",
+        "双灵根者，不骄不馁，方为正道。",
+        "灵根两脉，一刚一柔，此为【双灵根】！",
+        "你是【双灵根】，修炼时要注重平衡。",
+        "双灵根者，常有奇遇，你或许就是下一个。",
+        "你拥有【双灵根】，莫负光阴。",
+        "双灵根之体，最适合走丹修之路。",
+        "你是【双灵根】，宗门虽不会重点培养，但也不会放弃。",
+        "灵根三色，资质平庸，你是【三灵根】。修仙之路注定艰辛，唯有加倍努力方可逆天改命。",
+        "三灵根者，在修仙界中比比皆是，欲成大事，需靠心智与机缘。",
+        "你身具【三灵根】，灵气驳杂，修行缓慢，但若有大毅力，未必不能突破。",
+        "三灵根之资，虽非上乘，但若选择旁门左道，或可另辟蹊径。",
+        "你是【三灵根】，修行的每一步都比别人艰难，但坚持总有回报。",
+        "三灵根者，需以勤补拙，不可懈怠。",
+        "你拥有【三灵根】，建议专精一道，莫贪多。",
+        "三灵根之体，灵气运转滞涩，需借助外物辅助。",
+        "你是【三灵根】，不要灰心，许多大能早年亦是三灵根。",
+        "三灵根者，常常被宗门忽视，但自我修炼亦可成材。",
+        "你身负【三灵根】，修炼时要学会取舍。",
+        "三灵根之资，若有高人指点，亦能脱胎换骨。",
+        "你是【三灵根】，修仙路上坑多路滑，小心谨慎。",
+        "三灵根者，福缘浅薄，但机缘可遇不可求。",
+        "你拥有【三灵根】，一步一个脚印，终有登顶之日。",
+        "三灵根之体，虽不惊艳，但胜在稳定。",
+        "你是【三灵根】，莫与他人比较，修己身即可。",
+        "三灵根者，常有杂念，需静心养性。",
+        "你身具【三灵根】，筑基已属不易，金丹更是奢望，但梦想还是要有的。",
+        "三灵根之资，若得丹药堆砌，亦可勉强前行。",
+        "你是【三灵根】，修仙界中的大多数，平凡而不平庸。",
+        "三灵根者，多有血性，你当善用。",
+        "你拥有【三灵根】，修行时要善于利用环境。",
+        "三灵根之体，最适合学习杂学，以博取资源。",
+        "你是【三灵根】，莫怨天尤人，自强不息。",
+        "三灵根者，往往长寿，因为修炼慢，反而少历风险。",
+        "你身负【三灵根】，谨慎行事，方为上策。",
+        "三灵根之资，若有法宝护身，亦可横行一时。",
+        "你是【三灵根】，修仙之路虽远，行则将至。",
+        "三灵根者，宜结伴修行，互相扶持。",
+        "你拥有【三灵根】，多行善事，积累功德。",
+        "三灵根之体，虽无大用，但可保平安。",
+        "你是【三灵根】，莫要强求，顺其自然。",
+        "三灵根者，常有小聪明，但成大器者少。",
+        "你身具【三灵根】，需专注炼体，以强补弱。",
+        "三灵根之资，若遇天地异变，或有一线生机。",
+        "你是【三灵根】，修仙界最普通的一员，加油。",
+        "三灵根者，修炼之余，可学些手艺谋生。",
+        "你拥有【三灵根】，大道五十，天衍四九，你便是那遁去的一。",
+        "三灵根之体，虽不显眼，但贵在真实。",
+        "你是【三灵根】，活着就是胜利。",
+        "三灵根者，宜修符道，以符箓补灵气不足。",
+        "你身负【三灵根】，阵法之道或可助你一臂之力。",
+        "三灵根之资，若得灵脉滋养，或有转机。",
+        "你是【三灵根】，莫要迷失本心。",
+        "三灵根者，常有退路，因为修为低，反而不易引祸。",
+        "你拥有【三灵根】，好好活着，比什么都强。",
+        "三灵根之体，适合游历四方，增长见识。",
+        "你是【三灵根】，修仙不易，且行且珍惜。",
+        "三灵根者，多才多艺，此乃优势。",
+        "你身具【三灵根】，前途未卜，但命运在自己手中。",
+        "三灵根之资，若有上古丹药，或能洗髓伐毛。",
+        "你是【三灵根】，莫要放弃，坚持就是胜利。",
+        "三灵根者，常有奇遇，你或许就是那个幸运儿。",
+        "你拥有【三灵根】，未来可期，只要不死。",
+        "三灵根之体，虽平庸，但也可以活得精彩。",
+        "你是【三灵根】，修炼之余，不妨钻研一些偏门。",
+        "三灵根者，应寻名师指点，以正修行之路。",
+        "你身负【三灵根】，博览群书，或可开悟。",
+        "三灵根之资，若得灵脉滋养，或有转机。",
+        "你是【三灵根】，精研一门技艺，亦可安身立命。",
+        "三灵根者，常怀敬畏之心，方能走远。",
+        "你拥有【三灵根】，莫要贪多，专精一法。",
+        "三灵根之体，虽无大运，但小福不断。",
+        "你是【三灵根】，保持平常心，自得其乐。",
+        "三灵根者，宜修心养性，以静制动。",
+        "你身负【三灵根】，书画琴棋，皆是修行。",
+        "三灵根之资，若结善缘，自有福报。",
+        "你是【三灵根】，修仙路上，不忘初心。",
+        "灵根四现，资质驳杂，你是【四灵根】。修炼极为困难，若无大机缘，终生难以筑基。",
+        "四灵根者，在修仙界中属于底层，但若有奇遇，亦可翻身。",
+        "你身具【四灵根】，灵气散乱，修炼事倍功半，建议走炼体或外物之道。",
+        "四灵根之资，几乎被宗门拒之门外，只能做散修。",
+        "你是【四灵根】，莫要灰心，历史上亦有四灵根飞升的先例。",
+        "四灵根者，需借助灵石丹药才能勉强修行，成本极高。",
+        "你拥有【四灵根】，建议寻找灵脉之地闭关。",
+        "四灵根之体，修炼缓慢，但寿命尚可，可徐徐图之。",
+        "你是【四灵根】，若遇天材地宝，或能洗去杂灵根。",
+        "四灵根者，多修杂学，以技养道。",
+        "你身负【四灵根】，符阵之道或许更适合你。",
+        "四灵根之资，若有灵兽相助，亦可一战。",
+        "你是【四灵根】，修仙路上需步步为营。",
+        "四灵根者，常有惊人韧性，你当发挥此长。",
+        "你拥有【四灵根】，莫要贪图快速，稳扎稳打。",
+        "四灵根之体，虽然劣势，但也可入魔道寻求突破。",
+        "你是【四灵根】，正邪之道，需自行抉择。",
+        "四灵根者，宜修辅助之术，以己之长补己之短。",
+        "你身具【四灵根】，阵法大师或许能指点你。",
+        "四灵根之资，若有上古功法，或有转机。",
+        "你是【四灵根】，炼器之道或可为你打开局面。",
+        "四灵根者，多为生活所迫，选择炼丹。",
+        "你拥有【四灵根】，炼丹若成，亦可致富。",
+        "四灵根之体，适合修炼御物之术。",
+        "你是【四灵根】，灵植培育或可成为你的倚仗。",
+        "四灵根者，常有怪癖，但也因此独树一帜。",
+        "你身负【四灵根】，莫要轻信他人，多留后路。",
+        "四灵根之资，若得雷劫洗炼，或可蜕变。",
+        "你是【四灵根】，修仙界底层，但底层亦有活路。",
+        "四灵根者，宜修地煞之术，借大地之力。",
+        "你拥有【四灵根】，星辰之力或许能弥补灵根不足。",
+        "四灵根之体，适合修习遁术，保命第一。",
+        "你是【四灵根】，外交之道有时比修为管用。",
+        "四灵根者，多疑善谋，此乃生存之道。",
+        "你身具【四灵根】，善于发现机会，方能崛起。",
+        "四灵根之资，若入魔宗，或受重视。",
+        "你是【四灵根】，正魔之别，存乎一心。",
+        "灵根五杂，几乎难堪造就，你是【五灵根】。修仙界中最差的资质，若无逆天机缘，终其一生也不过炼气。",
+        "五灵根者，灵气杂乱，修行极为艰难，通常被当作凡人。",
+        "你身具【五灵根】，除非仙人灌顶，否则难有作为。",
+        "五灵根之资，建议放弃修仙，安心凡俗生活。",
+        "你是【五灵根】，但命运无常，或许另有出路。",
+        "五灵根者，常被认为是废灵根，但废灵根亦有逆袭传说。",
+        "你拥有【五灵根】，如果一定要修仙，建议走香火愿力之道。",
+        "五灵根之体，最适合修习卜卦天机之术。",
+        "你是【五灵根】，虽不能打斗，但可做智囊。",
+        "五灵根者，常有奇特体质，或许有隐藏天赋。",
+        "你身负【五灵根】，丹药于你作用甚微，需寻天材地宝。",
+        "五灵根之资，若得仙缘，或可脱胎换骨。",
+        "你是【五灵根】，莫要强求，顺其自然。",
+        "五灵根者，多福缘，因为天道平衡。",
+        "你拥有【五灵根】，或许你本就是凡人，何必修仙。",
+        "五灵根之体，可以尝试修炼魔功，以煞气炼体。",
+        "你是【五灵根】，正魔两道皆难，不如逍遥凡尘。"
+    ];
+
+    // ---------- 基础数据 ----------
+    const baseRoots = ['金', '木', '水', '火', '土'];
+    const weights = [1.2, 1.0, 1.0, 1.2, 1.2];
+    const mutationMap = {
+        '金': { target: '音', rate: 0.025 },
+        '木': { target: '花', rate: 0.025 },
+        '水': { target: '幻', rate: 0.025 },
+        '火': { target: '电', rate: 0.05 },
+        '土': { target: '幽冥', rate: 0.05 }
+    };
+
+    // ---------- localStorage ----------
+    function loadData() {
+        let raw = localStorage.getItem('lingenTestData');
+        if (raw) {
+            try { return JSON.parse(raw); } catch(e) {}
+        }
+        return { history: [], recoveryTime: null };
+    }
+    function saveData(data) {
+        localStorage.setItem('lingenTestData', JSON.stringify(data));
+    }
+
+    // ---------- 恢复次数 ----------
+    function checkAndRecover(data) {
+        const now = Date.now();
+        let validCount = data.history.filter(item => item.valid).length;
+        if (validCount >= MAX_VALID && data.recoveryTime) {
+            const elapsed = now - data.recoveryTime;
+            const intervals = Math.floor(elapsed / RECOVERY_INTERVAL_MS);
+            if (intervals > 0) {
+                const invalidItems = data.history.filter(item => !item.valid);
+                const sortedInvalid = invalidItems.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                const toChange = Math.min(intervals, invalidItems.length, MAX_VALID - validCount);
+                for (let i = 0; i < toChange; i++) {
+                    sortedInvalid[i].valid = true;
+                }
+                if (toChange > 0) {
+                    data.recoveryTime = now;
+                }
+            }
+        } else if (validCount < MAX_VALID) {
+            data.recoveryTime = null;
+        }
+        return data;
+    }
+
+// ========== 核心函数：根据描述生成正确数量的灵根 ==========
+    function generateRootString(desc) {
+        // 1. 确定需要的数量
+        let count = 1;
+        if (desc.includes('极品天灵根')) count = 1;
+        else if (desc.includes('单灵根')) count = 1;
+        else if (desc.includes('双灵根')) count = 2;
+        else if (desc.includes('三灵根')) count = 3;
+        else if (desc.includes('四灵根')) count = 4;
+        else if (desc.includes('五灵根')) count = 5;
+
+        // 2. 构建加权扩展池
+        let pool = [];
+        baseRoots.forEach((root, idx) => {
+            let w = Math.round(weights[idx] * 10); 
+            for (let i = 0; i < w; i++) {
+                pool.push(root);
+            }
+        });
+
+        // 3. Fisher-Yates 洗牌
+        for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+
+        // 4. 从洗好的池中取前 count 个，并去重
+        let selected = [];
+        let seen = new Set();
+        for (let root of pool) {
+            if (!seen.has(root)) {
+                seen.add(root);
+                selected.push(root);
+                if (selected.length === count) break;
+            }
+        }
+
+        // 5. 如果去重后数量不足，从 baseRoots 补
+        if (selected.length < count) {
+            for (let root of baseRoots) {
+                if (!seen.has(root)) {
+                    seen.add(root);
+                    selected.push(root);
+                    if (selected.length === count) break;
+                }
+            }
+        }
+
+        // 6. 对每个灵根进行变异判断
+        let final = selected.map(r => {
+            const mut = mutationMap[r];
+            if (mut && Math.random() < mut.rate) {
+                return mut.target;
+            }
+            return r;
+        });
+
+        return final.join('、');
+    }
+
+    // ---------- 有效性判断 ----------
+    function isValidRoot(desc) {
+        return desc.includes('双灵根') || desc.includes('单灵根') || desc.includes('极品天灵根');
+    }
+    
+    function getRank(desc) {
+        if (desc.includes('极品天灵根')) return 1;
+        if (desc.includes('单灵根')) return 2;
+        if (desc.includes('双灵根')) return 3;
+        if (desc.includes('三灵根')) return 4;
+        if (desc.includes('四灵根')) return 5;
+        if (desc.includes('五灵根')) return 6;
+        return 99;
+    }
+
+    // ---------- 渲染颜色 ----------
+    function renderColoredRoots(rootStr) {
+        if (!rootStr) return '';
+        return rootStr.split('、').map(r => {
+            const color = getRootColor(r);
+            return `<span class="root-item" style="color:${color};">${r}</span>`;
+        }).join('、');
+    }
+
+   // ---------- 自动修复旧数据 ----------
+    function repairHistory(data) {
+        let repaired = false;
+        data.history.forEach(item => {
+            // 获取描述中应有的数量
+            let expected = 1;
+            if (item.desc.includes('极品天灵根')) expected = 1;
+            else if (item.desc.includes('单灵根')) expected = 1;
+            else if (item.desc.includes('双灵根')) expected = 2;
+            else if (item.desc.includes('三灵根')) expected = 3;
+            else if (item.desc.includes('四灵根')) expected = 4;
+            else if (item.desc.includes('五灵根')) expected = 5;
+
+            // 检查实际存储的灵根数量
+            let actual = item.root ? item.root.split('、').length : 0;
+            if (actual !== expected) {
+                // 重新生成正确的灵根字符串
+                item.root = generateRootString(item.desc);
+                repaired = true;
+            }
+        });
+        return repaired;
+    }
+
+    // ---------- UI更新 ----------
+    function updateUI(data) {
+        data = checkAndRecover(data);
+        // 修复历史记录
+        if (repairHistory(data)) {
+            saveData(data);
+        }
+
+        const validCount = data.history.filter(item => item.valid).length;
+        const totalCount = data.history.length;
+        document.getElementById('valid-count').textContent = validCount;
+        document.getElementById('total-count').textContent = totalCount;
+
+        const recoveryDiv = document.getElementById('recovery-info');
+        if (validCount >= MAX_VALID) {
+            document.getElementById('status-text').textContent = '已测满（恢复中）';
+            document.getElementById('testBtn').disabled = true;
+            document.getElementById('testBtn').textContent = '已测满';
+            if (!data.recoveryTime) {
+                data.recoveryTime = Date.now();
+                saveData(data);
+            }
+            const elapsed = Date.now() - data.recoveryTime;
+            const remaining = Math.max(0, RECOVERY_INTERVAL_MS - elapsed);
+            const hours = Math.floor(remaining / (60 * 60 * 1000));
+            const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+            recoveryDiv.innerHTML = `⏳ 下次恢复有效次数：<span class="highlight-time">${hours}小时${minutes}分钟</span> 后`;
+        } else {
+            document.getElementById('status-text').textContent = '可测试';
+            document.getElementById('testBtn').disabled = false;
+            document.getElementById('testBtn').textContent = '逆天改命';
+            recoveryDiv.innerHTML = validCount > 0 ? `✅ 当前有效次数 ${validCount}/5` : '';
+            if (data.recoveryTime) {
+                data.recoveryTime = null;
+                saveData(data);
+            }
+        }
+
+        // 排序历史
+        const sorted = [...data.history].sort((a, b) => getRank(a.desc) - getRank(b.desc));
+        const listDiv = document.getElementById('history-list');
+        if (sorted.length === 0) {
+            listDiv.innerHTML = '<div style="color:#5a6a7a; font-size:0.8rem; text-align:center;">暂无记录</div>';
+        } else {
+            let html = '';
+            sorted.forEach((item, index) => {
+                const validLabel = item.valid ? '<span class="valid">[有效]</span>' : '<span class="invalid">[无效]</span>';
+                const coloredRoots = renderColoredRoots(item.root);
+                let delAttr = item.id ? `onclick="deleteEntry('${item.id}')"` :
+                    `onclick="deleteEntryByKey('${encodeURIComponent(item.desc + '||' + item.root)}')"`;
+                html += `<div class="history-item">
+                    <span class="seq">#${index+1}</span> ${validLabel}
+                    <span class="desc-text">${item.desc}</span>
+                    <span class="arrow">→</span>
+                    <span class="root-display">${coloredRoots}</span>
+                    <button class="del-btn" ${delAttr}>✕</button>
+                </div>`;
+            });
+            listDiv.innerHTML = html;
+        }
+
+        // 定时刷新倒计时
+        if (validCount >= MAX_VALID && data.recoveryTime) {
+            if (window._recoveryTimer) clearInterval(window._recoveryTimer);
+            window._recoveryTimer = setInterval(() => {
+                const currentData = loadData();
+                updateUI(currentData);
+            }, 30000);
+        } else {
+            if (window._recoveryTimer) {
+                clearInterval(window._recoveryTimer);
+                window._recoveryTimer = null;
+            }
+        }
+    }
+
+    // ---------- 删除功能 ----------
+    function deleteEntry(id) {
+        if (!confirm('确定删除该记录吗？')) return;
+        let data = loadData();
+        data.history = data.history.filter(item => item.id !== id);
+        saveData(data);
+        updateUI(data);
+        document.getElementById('result-box').innerHTML = '记录已删除。';
+    }
+    function deleteEntryByKey(key) {
+        if (!confirm('确定删除该记录吗？')) return;
+        let data = loadData();
+        const [desc, root] = decodeURIComponent(key).split('||');
+        const idx = data.history.findIndex(item => item.desc === desc && item.root === root);
+        if (idx !== -1) {
+            data.history.splice(idx, 1);
+            saveData(data);
+            updateUI(data);
+            document.getElementById('result-box').innerHTML = '记录已删除。';
+        } else {
+            alert('未找到该记录。');
+        }
+    }
+
+    // ---------- 主测试 ----------
+    function testRoot() {
+        let data = loadData();
+        data = checkAndRecover(data);
+        saveData(data);
+
+        const validCount = data.history.filter(item => item.valid).length;
+        if (validCount >= MAX_VALID) {
+            document.getElementById('result-box').innerHTML = `
+                <div style="color: #ffaa66;">⚠️ 已测满 ${MAX_VALID} 次，请等待恢复。</div>
+                <div class="root-detail">天道有常，知足常乐。</div>
+            `;
+            updateUI(data);
+            return;
+        }
+
+        const idx = Math.floor(Math.random() * descriptions.length);
+        let desc = descriptions[idx];
+        const rootStr = generateRootString(desc);
+        const valid = isValidRoot(desc);
+
+        const id = Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+
+        data.history.push({
+            id: id,
+            desc: desc,
+            root: rootStr,
+            valid: valid,
+            timestamp: Date.now()
+        });
+        saveData(data);
+
+        const box = document.getElementById('result-box');
+        const validText = valid ? '✅ 消耗有效次数' : '❌ 不消耗次数';
+        box.innerHTML = `
+            <div>${desc}</div>
+            <div class="root-detail">
+                ✦ 灵根属性：<span class="highlight">${rootStr}</span>
+                <span style="display:block; margin-top:6px; font-size:0.85rem; color:#8a9aaa;">${validText}</span>
+            </div>
+        `;
+
+        if (valid) {
+            data.recoveryTime = null;
+            saveData(data);
+        }
+
+        updateUI(data);
+    }
+
+    // ---------- 初始化 ----------
+    window.onload = function() {
+        const data = loadData();
+        // 修复任何已存在的错误数据
+        repairHistory(data);
+        data = checkAndRecover(data);
+        saveData(data);
+        updateUI(data);
+        if (data.history.length > 0) {
+            const last = data.history[data.history.length - 1];
+            const validText = last.valid ? '✅ 消耗有效次数' : '❌ 不消耗次数';
+            document.getElementById('result-box').innerHTML = `
+                <div>${last.desc}</div>
+                <div class="root-detail">
+                    ✦ 灵根属性：<span class="highlight">${last.root}</span>
+                    <span style="display:block; margin-top:6px; font-size:0.85rem; color:#8a9aaa;">${validText}</span>
+                </div>
+            `;
+        } else {
+            document.getElementById('result-box').innerHTML = '点击「逆天改命」，窥探你的灵根天命。';
+        }
+    };
+</script>
+</body>
+</html>
